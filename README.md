@@ -9,6 +9,7 @@ Repositorio de laboratorios del **Curso de Arquitectura de Nube**, dictado por *
 | Laboratorio | Descripción |
 |---|---|
 | [VM+Firewall](VM+Firewall/) | Despliegue automatizado de infraestructura Azure con Azure Firewall, máquinas virtuales, DNAT, UDR y Firewall Policy. |
+| [Balanceador de carga](Balanceador%20de%20carga/) | Azure Load Balancer (Standard) con dos VMs Linux, Nginx, Health Probe y NAT Rules para SSH. |
 
 ---
 
@@ -21,6 +22,7 @@ Este repositorio reúne los ejercicios prácticos (laboratorios) desarrollados d
 - Firewalls y políticas de seguridad
 - Enrutamiento definido por el usuario (UDR)
 - Traducción de direcciones de red (DNAT)
+- Balanceadores de carga y alta disponibilidad
 - Automatización de infraestructura con scripts
 
 ---
