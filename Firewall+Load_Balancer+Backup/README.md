@@ -135,7 +135,7 @@ Las VMs **no tienen IP pública**. Para verificar que Nginx funciona, se puede a
 | `SUBNET_FIREWALL_MGMT_PREFIX` | `10.0.1.0/26` | CIDR subred gestión Firewall |
 | `SUBNET_VPS_PREFIX` | `10.0.2.0/24` | CIDR subred VMs |
 | `SUBNET_LB_PREFIX` | `10.0.3.0/24` | CIDR subred Load Balancer |
-| `VM_SIZE` | `Standard_B2s` | Tamaño de la VM |
+| `VM_SIZE` | `Standard_D2s_v3` | Tamaño de las VMs |
 | `LINUX_IMAGE` | `Ubuntu2204` | Imagen del SO |
 | `ADMIN_USER` | `azureuser` | Usuario administrador |
 | `ADMIN_PASSWORD` | `Admin123456.` | Contraseña de administrador |

@@ -65,7 +65,7 @@ SUBNET_LB_PREFIX="10.0.3.0/24"                    # 256 direcciones
 # --- Máquinas Virtuales ---
 VM_LINUX1_NAME="NubeVpsLinux1"
 VM_LINUX2_NAME="NubeVpsLinux2"
-VM_SIZE="Standard_B2s"
+VM_SIZE="Standard_D2s_v3"
 LINUX_IMAGE="Ubuntu2204"
 ADMIN_USER="azureuser"
 ADMIN_PASSWORD="Admin123456."
