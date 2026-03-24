@@ -1,6 +1,6 @@
 # 🔧 Pre-configuración de Recursos Azure
 
-Script de despliegue automatizado para preparar la infraestructura Azure **antes de clase**. Crea la base de red, subredes y una VM Linux con Nginx lista para usar.
+Script de despliegue automatizado para preparar la infraestructura Azure **antes de clase**. Crea la base de red, subredes y dos VMs Linux con Nginx listas para usar.
 
 ---
 
@@ -23,7 +23,9 @@ Script de despliegue automatizado para preparar la infraestructura Azure **antes
 - Grupo de recursos `GrupoNube`
 - Red virtual con 4 subredes (Firewall, Firewall Management, VPS, Load Balancer)
 - NSG con reglas HTTP (80), SSH (22) y RDP (3389)
-- Una VM Linux (Ubuntu 22.04) con Nginx y página personalizada
+- Dos VMs Linux (Ubuntu 22.04) con Nginx y página personalizada:
+  - **NubeVpsLinux1**
+  - **NubeVpsLinux2**
 
 ---
 
@@ -41,6 +43,7 @@ graph TD
         subgraph S3["💻 NubeVpsGroups"]
             S3D["10.0.2.0/24 — 256 IPs"]
             VM1["🖥️ NubeVpsLinux1\nUbuntu 22.04 + Nginx\nHTTP:80 | SSH:22 | RDP:3389\nIP privada"]
+            VM2["🖥️ NubeVpsLinux2\nUbuntu 22.04 + Nginx\nHTTP:80 | SSH:22 | RDP:3389\nIP privada"]
         end
         subgraph S4["⚖️ NubeLoadBalancer"]
             S4D["10.0.3.0/24 — 256 IPs"]
@@ -49,6 +52,7 @@ graph TD
 
     NSG["🛡️ NSG: nube-vps-nsg\nHTTP:80 | SSH:22 | RDP:3389"]
     NSG -.->|protege| VM1
+    NSG -.->|protege| VM2
 
     style VNET fill:#1a1a2e,stroke:#16213e,color:#fff
     style S1 fill:#e74c3c22,stroke:#e74c3c,color:#fff
@@ -56,6 +60,7 @@ graph TD
     style S3 fill:#3498db22,stroke:#3498db,color:#fff
     style S4 fill:#2ecc7122,stroke:#2ecc71,color:#fff
     style VM1 fill:#3498db,stroke:#2980b9,color:#fff
+    style VM2 fill:#3498db,stroke:#2980b9,color:#fff
     style NSG fill:#9b59b6,stroke:#8e44ad,color:#fff
 ```
 
@@ -94,8 +99,9 @@ El script tarda aproximadamente **5-10 minutos**.
 | Subred | `NubeLoadBalancer` | 10.0.3.0/24 — 256 IPs (Load Balancer) |
 | NSG | `nube-vps-nsg` | Reglas HTTP:80, SSH:22, RDP:3389 |
 | VM Linux | `NubeVpsLinux1` | Ubuntu 22.04 + Nginx, sin IP pública |
+| VM Linux | `NubeVpsLinux2` | Ubuntu 22.04 + Nginx, sin IP pública |
 
-### Script instalado en la VM
+### Script instalado en las VMs
 
 ```bash
 #!/bin/bash
@@ -110,7 +116,7 @@ echo "<h1>Hola Mundo desde $(hostname) <strong> Pendiente </strong> </h1>" > /va
 
 ## 🔎 Verificación
 
-La VM **no tiene IP pública**. Para verificar que Nginx funciona, se puede acceder desde:
+Las VMs **no tienen IP pública**. Para verificar que Nginx funciona, se puede acceder desde:
 
 - **Azure Bastion** (conexión por navegador)
 - **Otra VM en la misma VNet** (`curl http://<IP_PRIVADA>`)

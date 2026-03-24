@@ -62,8 +62,9 @@ SUBNET_VPS_PREFIX="10.0.2.0/24"                   # 256 direcciones
 SUBNET_LB_NAME="NubeLoadBalancer"
 SUBNET_LB_PREFIX="10.0.3.0/24"                    # 256 direcciones
 
-# --- Máquina Virtual ---
+# --- Máquinas Virtuales ---
 VM_LINUX1_NAME="NubeVpsLinux1"
+VM_LINUX2_NAME="NubeVpsLinux2"
 VM_SIZE="Standard_B2s"
 LINUX_IMAGE="Ubuntu2204"
 ADMIN_USER="azureuser"
@@ -316,7 +317,53 @@ az vm run-command invoke \
     echo "<h1>Hola Mundo desde $(hostname) <strong> Pendiente </strong> </h1>" > /var/www/html/index.html
   ' \
   --output none
-echo "  ✅ Nginx instalado con página personalizada."
+echo "  ✅ Nginx instalado con página personalizada en '$VM_LINUX1_NAME'."
+
+# ----- VM Linux: NubeVpsLinux2 -----
+echo "💻 Creando/verificando VM '$VM_LINUX2_NAME' (Ubuntu 22.04 LTS)..."
+if exists_vm "$VM_LINUX2_NAME"; then
+  echo "  ℹ️  VM '$VM_LINUX2_NAME' ya existe, se omite creación."
+else
+  az vm create \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$VM_LINUX2_NAME" \
+    --location "$LOCATION" \
+    --image "$LINUX_IMAGE" \
+    --size "$VM_SIZE" \
+    --admin-username "$ADMIN_USER" \
+    --admin-password "$ADMIN_PASSWORD" \
+    --authentication-type password \
+    --vnet-name "$VNET_NAME" \
+    --subnet "$SUBNET_VPS_NAME" \
+    --nsg "$NSG_NAME" \
+    --public-ip-address "" \
+    --output none
+  echo "  ✅ VM '$VM_LINUX2_NAME' creada en subred '$SUBNET_VPS_NAME'."
+fi
+
+# ----- Abrir puertos en la VM 2 -----
+echo "🛡️  Abriendo puertos 80, 22 y 3389 en '$VM_LINUX2_NAME'..."
+az vm open-port --resource-group "$RESOURCE_GROUP" --name "$VM_LINUX2_NAME" --port 80 --priority 1100 --output none 2>/dev/null || true
+az vm open-port --resource-group "$RESOURCE_GROUP" --name "$VM_LINUX2_NAME" --port 22 --priority 1200 --output none 2>/dev/null || true
+az vm open-port --resource-group "$RESOURCE_GROUP" --name "$VM_LINUX2_NAME" --port 3389 --priority 1300 --output none 2>/dev/null || true
+echo "  ✅ Puertos abiertos en '$VM_LINUX2_NAME' (HTTP:80, SSH:22, RDP:3389)."
+
+# ----- Instalación de Nginx con página personalizada en VM 2 -----
+echo "🌐 Instalando Nginx en '$VM_LINUX2_NAME'..."
+az vm run-command invoke \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$VM_LINUX2_NAME" \
+  --command-id RunShellScript \
+  --scripts '
+    #!/bin/bash
+    sudo su
+    apt-get -y update
+    apt-get -y upgrade
+    apt-get -y install nginx
+    echo "<h1>Hola Mundo desde $(hostname) <strong> Pendiente </strong> </h1>" > /var/www/html/index.html
+  ' \
+  --output none
+echo "  ✅ Nginx instalado con página personalizada en '$VM_LINUX2_NAME'."
 
 # =====================================================================
 # VERIFICACIÓN FINAL
@@ -326,8 +373,10 @@ echo "════════════════════════�
 echo "  VERIFICACIÓN FINAL"
 echo "═══════════════════════════════════════════════════════════════"
 
-# Obtener IP privada de la VM
-VM_PRIVATE_IP=$(az vm show -g "$RESOURCE_GROUP" -n "$VM_LINUX1_NAME" \
+# Obtener IPs privadas de las VMs
+VM1_PRIVATE_IP=$(az vm show -g "$RESOURCE_GROUP" -n "$VM_LINUX1_NAME" \
+  --show-details --query "privateIps" -o tsv 2>/dev/null || echo "N/A")
+VM2_PRIVATE_IP=$(az vm show -g "$RESOURCE_GROUP" -n "$VM_LINUX2_NAME" \
   --show-details --query "privateIps" -o tsv 2>/dev/null || echo "N/A")
 
 echo ""
@@ -341,11 +390,12 @@ echo "   │   ├── $SUBNET_FIREWALL_MGMT_NAME → $SUBNET_FIREWALL_MGMT_PR
 echo "   │   ├── $SUBNET_VPS_NAME           → $SUBNET_VPS_PREFIX (256 IPs)"
 echo "   │   └── $SUBNET_LB_NAME            → $SUBNET_LB_PREFIX (256 IPs)"
 echo "   ├── NSG:             $NSG_NAME (HTTP:80, SSH:22, RDP:3389)"
-echo "   └── VM:              $VM_LINUX1_NAME (Ubuntu 22.04 + Nginx)"
-echo "                        IP privada: $VM_PRIVATE_IP"
-echo "                        Subred: $SUBNET_VPS_NAME"
+echo "   ├── VM:              $VM_LINUX1_NAME (Ubuntu 22.04 + Nginx)"
+echo "   │                    IP privada: $VM1_PRIVATE_IP"
+echo "   └── VM:              $VM_LINUX2_NAME (Ubuntu 22.04 + Nginx)"
+echo "                        IP privada: $VM2_PRIVATE_IP"
 echo ""
-echo "⚠️  La VM no tiene IP pública. Para acceder:"
+echo "⚠️  Las VMs no tienen IP pública. Para acceder:"
 echo "   - Usar Azure Bastion"
 echo "   - Conectar desde otra VM en la misma VNet"
 echo "   - Configurar un Firewall con regla DNAT"
