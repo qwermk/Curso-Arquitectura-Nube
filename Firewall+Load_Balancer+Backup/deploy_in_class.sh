@@ -342,11 +342,14 @@ else
     --resource-group "$RESOURCE_GROUP" \
     --name "$FW_NAME" \
     --location "$LOCATION" \
+    --sku AZFW_VNet \
+    --tier Basic \
     --vnet-name "$VNET_NAME" \
     --firewall-policy "$FW_POLICY_NAME" \
+    --conf-name "FwIpConfig" \
     --public-ip "$FW_PUBLIC_IP_NAME" \
-    --m-public-ip-address "$FW_MGMT_PUBLIC_IP_NAME" \
-    --tier Basic \
+    --m-conf-name "FwMgmtIpConfig" \
+    --m-public-ip "$FW_MGMT_PUBLIC_IP_NAME" \
     --output none
   echo "  ✅ Firewall '$FW_NAME' creado."
 fi
