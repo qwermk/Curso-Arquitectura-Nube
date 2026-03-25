@@ -154,7 +154,7 @@ exists_fw_policy() {
 }
 
 exists_recovery_vault() {
-  az backup vault show -g "$RESOURCE_GROUP" -n "$1" --query "name" -o tsv >/dev/null 2>&1
+  az recoveryservices vault show -g "$RESOURCE_GROUP" -n "$1" --query "name" -o tsv >/dev/null 2>&1
 }
 
 # =====================================================================
@@ -386,22 +386,31 @@ fi
 
 # Crear la regla DNAT dentro del grupo
 echo "  🔀 Creando regla DNAT '$FW_DNAT_RULE_NAME'..."
-az network firewall policy rule-collection-group collection add-nat-collection \
-  --resource-group "$RESOURCE_GROUP" \
-  --policy-name "$FW_POLICY_NAME" \
+EXISTING_NAT=$(az network firewall policy rule-collection-group collection list \
+  -g "$RESOURCE_GROUP" --policy-name "$FW_POLICY_NAME" \
   --rule-collection-group-name "$FW_DNAT_COLLECTION_NAME" \
-  --name "$FW_DNAT_RULE_NAME" \
-  --collection-priority 100 \
-  --action DNAT \
-  --rule-name "$FW_DNAT_RULE_NAME" \
-  --rule-type NatRule \
-  --source-addresses "*" \
-  --destination-addresses "$FW_PUBLIC_IP" \
-  --destination-ports 80 \
-  --translated-address "$LB_FRONTEND_IP" \
-  --translated-port 80 \
-  --ip-protocols TCP \
-  --output none 2>/dev/null || true
+  --query "[?name=='$FW_DNAT_RULE_NAME'].name" -o tsv 2>/dev/null || true)
+
+if [[ -n "$EXISTING_NAT" ]]; then
+  echo "  ℹ️  Regla DNAT '$FW_DNAT_RULE_NAME' ya existe."
+else
+  az network firewall policy rule-collection-group collection add-nat-collection \
+    --resource-group "$RESOURCE_GROUP" \
+    --policy-name "$FW_POLICY_NAME" \
+    --rule-collection-group-name "$FW_DNAT_COLLECTION_NAME" \
+    --name "$FW_DNAT_RULE_NAME" \
+    --collection-priority 100 \
+    --action DNAT \
+    --rule-name "$FW_DNAT_RULE_NAME" \
+    --rule-type NatRule \
+    --source-addresses "*" \
+    --destination-addresses "$FW_PUBLIC_IP" \
+    --destination-ports 80 \
+    --translated-address "$LB_FRONTEND_IP" \
+    --translated-port 80 \
+    --ip-protocols TCP \
+    --output none
+fi
 echo "  ✅ Regla DNAT configurada:"
 echo "     Internet:80 → $FW_PUBLIC_IP:80 → $LB_FRONTEND_IP:80 (Load Balancer)"
 
@@ -415,11 +424,22 @@ echo "════════════════════════�
 echo "  FASE 6: RECOVERY SERVICES"
 echo "═══════════════════════════════════════════════════════════════"
 
+# Registrar el proveedor Microsoft.RecoveryServices si no está registrado
+echo "📋 Verificando registro del proveedor Microsoft.RecoveryServices..."
+RS_STATE=$(az provider show --namespace Microsoft.RecoveryServices --query "registrationState" -o tsv 2>/dev/null || echo "NotRegistered")
+if [[ "$RS_STATE" != "Registered" ]]; then
+  echo "  ⏳ Registrando proveedor Microsoft.RecoveryServices..."
+  az provider register --namespace Microsoft.RecoveryServices --wait --output none
+  echo "  ✅ Proveedor registrado."
+else
+  echo "  ✅ Proveedor ya registrado."
+fi
+
 echo "🗄️  Creando/verificando almacén de Recovery Services '$RECOVERY_VAULT_NAME'..."
 if exists_recovery_vault "$RECOVERY_VAULT_NAME"; then
   echo "  ℹ️  Almacén '$RECOVERY_VAULT_NAME' ya existe."
 else
-  az backup vault create \
+  az recoveryservices vault create \
     --resource-group "$RESOURCE_GROUP" \
     --name "$RECOVERY_VAULT_NAME" \
     --location "$LOCATION" \
