@@ -689,7 +689,6 @@ else
     --rcg-name "$RCG_NAME" \
     --collection-name "$NAT_COLLECTION_NAME" \
     --name "DNAT-Win-RDP" \
-    --rule-type NatRule \
     --source-addresses "*" \
     --destination-addresses "$FIREWALL_PUBLIC_IP" \
     --destination-ports "$RDP_EXTERNAL_PORT" \
@@ -714,7 +713,6 @@ if [[ -n "$LINUX_PRIVATE_IP" ]]; then
       --rcg-name "$RCG_NAME" \
       --collection-name "$NAT_COLLECTION_NAME" \
       --name "DNAT-Linux-SSH" \
-      --rule-type NatRule \
       --source-addresses "*" \
       --destination-addresses "$FIREWALL_PUBLIC_IP" \
       --destination-ports "$SSH_EXTERNAL_PORT" \
@@ -764,7 +762,6 @@ else
     --rcg-name "$RCG_NAME" \
     --collection-name "$NETWORK_COLLECTION_NAME" \
     --name "Allow-RDP" \
-    --rule-type NetworkRule \
     --source-addresses "*" \
     --destination-addresses "$SUBNET_WORKLOAD_PREFIX" \
     --destination-ports 3389 \
@@ -784,7 +781,6 @@ else
     --rcg-name "$RCG_NAME" \
     --collection-name "$NETWORK_COLLECTION_NAME" \
     --name "Allow-HTTP" \
-    --rule-type NetworkRule \
     --source-addresses "*" \
     --destination-addresses "$SUBNET_WORKLOAD_PREFIX" \
     --destination-ports 80 \
@@ -804,7 +800,6 @@ else
     --rcg-name "$RCG_NAME" \
     --collection-name "$NETWORK_COLLECTION_NAME" \
     --name "Allow-HTTPS" \
-    --rule-type NetworkRule \
     --source-addresses "*" \
     --destination-addresses "$SUBNET_WORKLOAD_PREFIX" \
     --destination-ports 443 \
@@ -826,7 +821,6 @@ if [[ -n "$LINUX_PRIVATE_IP" ]]; then
       --rcg-name "$RCG_NAME" \
       --collection-name "$NETWORK_COLLECTION_NAME" \
       --name "Allow-SSH" \
-      --rule-type NetworkRule \
       --source-addresses "*" \
       --destination-addresses "$SUBNET_WORKLOAD_PREFIX" \
       --destination-ports 22 \
