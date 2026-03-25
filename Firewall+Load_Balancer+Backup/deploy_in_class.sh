@@ -446,6 +446,30 @@ else
   echo "  ✅ Almacén '$RECOVERY_VAULT_NAME' creado."
 fi
 
+# ----- Habilitar backup de NubeVpsLinux1 con directiva por defecto -----
+BACKUP_POLICY_NAME="DefaultPolicy"
+
+echo "🛡️  Habilitando backup de '$VM_LINUX1_NAME' con directiva '$BACKUP_POLICY_NAME'..."
+EXISTING_BACKUP=$(az backup item show \
+  --resource-group "$RESOURCE_GROUP" \
+  --vault-name "$RECOVERY_VAULT_NAME" \
+  --container-name "$VM_LINUX1_NAME" \
+  --name "$VM_LINUX1_NAME" \
+  --backup-management-type AzureIaasVM \
+  --query "properties.protectionState" -o tsv 2>/dev/null || true)
+
+if [[ "$EXISTING_BACKUP" == "Protected" ]]; then
+  echo "  ℹ️  VM '$VM_LINUX1_NAME' ya tiene backup habilitado."
+else
+  az backup protection enable-for-vm \
+    --resource-group "$RESOURCE_GROUP" \
+    --vault-name "$RECOVERY_VAULT_NAME" \
+    --vm "$VM_LINUX1_NAME" \
+    --policy-name "$BACKUP_POLICY_NAME" \
+    --output none
+  echo "  ✅ Backup habilitado para '$VM_LINUX1_NAME' con directiva '$BACKUP_POLICY_NAME'."
+fi
+
 # =====================================================================
 # VERIFICACIÓN FINAL
 # =====================================================================
@@ -472,6 +496,7 @@ echo "   │   ├── IP admin:      $FW_MGMT_PUBLIC_IP_NAME"
 echo "   │   └── DNAT:          $FW_DNAT_RULE_NAME"
 echo "   │       └── $FW_PUBLIC_IP:80 → $LB_FRONTEND_IP:80"
 echo "   └── Recovery Vault:    $RECOVERY_VAULT_NAME"
+echo "       └── Backup:        $VM_LINUX1_NAME ($BACKUP_POLICY_NAME)"
 echo ""
 echo "🌐 Acceso desde Internet:"
 echo "   curl http://$FW_PUBLIC_IP"

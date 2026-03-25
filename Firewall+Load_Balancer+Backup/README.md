@@ -141,6 +141,7 @@ Script Bash **idempotente y no destructivo** que continúa el laboratorio desple
 | Paso | Recurso | Nombre | Detalle |
 |---|---|---|---|
 | 6.1 | Almacén | `NubeRecoveryServices` | Almacén de Recovery Services para backup |
+| 6.2 | Backup VM | `NubeVpsLinux1` | Backup con directiva `DefaultPolicy` |
 
 ---
 
@@ -195,6 +196,7 @@ bash deploy_in_class.sh
 | IP admin FW | `FirewallNubePublicAdministratorIp` | en-clase | IP de administración |
 | Regla DNAT | `DnatAccesVps` | en-clase | Acceso a VMs via Firewall |
 | Recovery Vault | `NubeRecoveryServices` | en-clase | Almacén de backup |
+| Backup VM | `NubeVpsLinux1` | en-clase | Backup con directiva DefaultPolicy |
 
 ---
 
