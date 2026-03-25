@@ -402,7 +402,6 @@ else
     --collection-priority 100 \
     --action DNAT \
     --rule-name "$FW_DNAT_RULE_NAME" \
-    --rule-type NatRule \
     --source-addresses "*" \
     --destination-addresses "$FW_PUBLIC_IP" \
     --destination-ports 80 \
