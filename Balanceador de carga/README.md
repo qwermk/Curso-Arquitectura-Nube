@@ -35,28 +35,34 @@ Script de despliegue automatizado de un **Azure Load Balancer (Standard)** con d
 
 ## 🏗️ Arquitectura
 
-```
-Internet
-   │
-   ▼
-┌──────────────────────────────┐
-│   Load Balancer Public IP    │
-│   (Standard SKU)             │
-├──────────────────────────────┤
-│  :80 (HTTP) → Backend Pool   │
-│  :2201 (SSH) → VM01:22       │
-│  :2202 (SSH) → VM02:22       │
-└──────────┬───────────────────┘
-           │
-    ┌──────┴──────┐
-    ▼             ▼
-┌────────┐  ┌────────┐
-│ VM 01  │  │ VM 02  │
-│ Nginx  │  │ Nginx  │
-│10.0.2.x│  │10.0.2.x│
-└────────┘  └────────┘
-   SubNetLoadBalancer
-     (10.0.2.0/24)
+```mermaid
+graph TD
+    Internet["🌍 Internet"]
+
+    Internet -->|":80 HTTP"| LBPIP["📡 Load Balancer Public IP\nStandard SKU"]
+    LBPIP --> LB
+
+    subgraph VNET["🌐 NubeVnet 10.0.0.0/16"]
+        subgraph S1["⚖️ SubNetLoadBalancer 10.0.2.0/24"]
+            LB["⚖️ NubeLoadBalancer\n:80 HTTP \u2192 Backend Pool\n:2201 SSH \u2192 VM01:22\n:2202 SSH \u2192 VM02:22"]
+            VM1["🖥️ lb-linux-01\nUbuntu 22.04 + Nginx"]
+            VM2["🖥️ lb-linux-02\nUbuntu 22.04 + Nginx"]
+        end
+    end
+
+    LB -->|":80"| VM1
+    LB -->|":80"| VM2
+
+    Internet -->|":2201 SSH"| LBPIP
+    Internet -->|":2202 SSH"| LBPIP
+
+    style Internet fill:#e67e22,stroke:#d35400,color:#fff
+    style VNET fill:#1a1a2e,stroke:#16213e,color:#fff
+    style S1 fill:#2ecc7122,stroke:#2ecc71,color:#fff
+    style LB fill:#2ecc71,stroke:#27ae60,color:#fff
+    style VM1 fill:#3498db,stroke:#2980b9,color:#fff
+    style VM2 fill:#3498db,stroke:#2980b9,color:#fff
+    style LBPIP fill:#0078d4,stroke:#005a9e,color:#fff
 ```
 
 ---

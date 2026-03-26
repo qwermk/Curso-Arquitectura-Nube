@@ -63,32 +63,39 @@ Script Bash **idempotente y no destructivo** que despliega:
 
 ## 🏗️ Arquitectura
 
-```
-Internet
-   │
-   ▼
-┌──────────────────────────────────┐
-│   Application Gateway            │
-│   (Standard V2, IP pública)      │
-│   Listener: HTTP:80              │
-├──────────────────────────────────┤
-│  URL Path Map:                   │
-│  ├── /imagenes/* → ImagesPool    │
-│  ├── /videos/*   → VideosPool    │
-│  └── /* default  → ImagesPool    │
-└──────────┬───────────┬───────────┘
-           │           │
-     ImagesPool   VideosPool
-           │           │
-     ┌─────┘           └─────┐
-     ▼                       ▼
-┌──────────┐          ┌──────────┐
-│VmImagenes│          │ VmVideo  │
-│ IIS/Nginx│          │ IIS/Nginx│
-│ 🖼️ Imgs  │          │ 🎬 Vids  │
-│ 10.0.4.x │          │ 10.0.4.x │
-└──────────┘          └──────────┘
-     SubNetBackendPool (10.0.4.0/24)
+```mermaid
+graph TD
+    Internet["🌍 Internet"]
+
+    Internet -->|"HTTP:80"| AGPIP["📡 App Gateway Public IP"]
+    AGPIP --> AG
+
+    subgraph VNET["🌐 NubeVnet 10.0.0.0/16"]
+        subgraph S1["🛡️ SubnetAppGateway 10.0.3.0/24"]
+            AG["🌐 NubeAppGateway\nStandard V2\nListener: HTTP:80"]
+        end
+        subgraph S2["💻 SubNetBackendPool 10.0.4.0/24"]
+            NSG["🛡️ NSG: appgw-backend-nsg\nHTTP:80 | RDP/SSH | Health Probes"]
+            VM1["🖥️ VmImagenes\nIIS/Nginx\n🖼️ Imgs"]
+            VM2["🖥️ VmVideo\nIIS/Nginx\n🎬 Vids"]
+            NSG -.->|protege| VM1
+            NSG -.->|protege| VM2
+        end
+    end
+
+    AG -->|"/imagenes/* \u2192 ImagesPool"| VM1
+    AG -->|"/videos/* \u2192 VideosPool"| VM2
+    AG -.->|"/* default \u2192 ImagesPool"| VM1
+
+    style Internet fill:#e67e22,stroke:#d35400,color:#fff
+    style VNET fill:#1a1a2e,stroke:#16213e,color:#fff
+    style S1 fill:#9b59b622,stroke:#9b59b6,color:#fff
+    style S2 fill:#3498db22,stroke:#3498db,color:#fff
+    style AG fill:#9b59b6,stroke:#8e44ad,color:#fff
+    style VM1 fill:#3498db,stroke:#2980b9,color:#fff
+    style VM2 fill:#3498db,stroke:#2980b9,color:#fff
+    style NSG fill:#e74c3c,stroke:#c0392b,color:#fff
+    style AGPIP fill:#0078d4,stroke:#005a9e,color:#fff
 ```
 
 > **app_gateway.sh** usa Windows Server 2022 + IIS · **app_gateway2.sh** usa Ubuntu 22.04 + Nginx
