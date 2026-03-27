@@ -88,6 +88,7 @@ RECOVERY_VAULT_NAME="NubeRecoveryServices"
 echo "🚀 Iniciando despliegue en clase (Fase 2)..."
 echo "📝 Log en: $LOG_FILE"
 az config set extension.use_dynamic_install=yes_without_prompt --output none
+az config set extension.dynamic_install_allow_preview=true --output none
 az account show --output none
 
 # =====================================================================
@@ -444,12 +445,12 @@ fi
 # para backup de VMs IaaS. Si existe, hay que eliminarlo primero.
 echo "🔍 Verificando si existe un Backup vault con el mismo nombre..."
 BV_EXISTS=$(az dataprotection backup-vault show \
-  -g "$RESOURCE_GROUP" -n "$RECOVERY_VAULT_NAME" \
+  -g "$RESOURCE_GROUP" --vault-name "$RECOVERY_VAULT_NAME" \
   --query "name" -o tsv 2>/dev/null || true)
 if [[ -n "$BV_EXISTS" ]]; then
   echo "  ⚠️  Eliminando Backup vault (tipo incorrecto) '$RECOVERY_VAULT_NAME'..."
   az dataprotection backup-vault delete \
-    -g "$RESOURCE_GROUP" -n "$RECOVERY_VAULT_NAME" \
+    -g "$RESOURCE_GROUP" --vault-name "$RECOVERY_VAULT_NAME" \
     --yes --output none 2>/dev/null || true
   echo "  ✅ Backup vault eliminado."
 fi
