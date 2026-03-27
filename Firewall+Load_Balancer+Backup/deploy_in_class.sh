@@ -419,6 +419,9 @@ echo "     Internet:80 → $FW_PUBLIC_IP:80 → $LB_FRONTEND_IP:80 (Load Balance
 # FASE 6: RECOVERY SERVICES
 # =====================================================================
 # Crea un almacén de Recovery Services para backup de las VMs.
+# NOTA: Recovery Services vault ≠ Backup vault. Son tipos diferentes.
+#   - Recovery Services vault (Microsoft.RecoveryServices/vaults) → IaaS VMs
+#   - Backup vault (Microsoft.DataProtection/BackupVaults) → Discos, Blobs
 # =====================================================================
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
@@ -436,6 +439,22 @@ else
   echo "  ✅ Proveedor ya registrado."
 fi
 
+# ----- Eliminar Backup vault (tipo incorrecto) si existe -----
+# az backup vault create crea un Backup vault (DataProtection), que NO sirve
+# para backup de VMs IaaS. Si existe, hay que eliminarlo primero.
+echo "🔍 Verificando si existe un Backup vault con el mismo nombre..."
+BV_EXISTS=$(az dataprotection backup-vault show \
+  -g "$RESOURCE_GROUP" -n "$RECOVERY_VAULT_NAME" \
+  --query "name" -o tsv 2>/dev/null || true)
+if [[ -n "$BV_EXISTS" ]]; then
+  echo "  ⚠️  Eliminando Backup vault (tipo incorrecto) '$RECOVERY_VAULT_NAME'..."
+  az dataprotection backup-vault delete \
+    -g "$RESOURCE_GROUP" -n "$RECOVERY_VAULT_NAME" \
+    --yes --output none 2>/dev/null || true
+  echo "  ✅ Backup vault eliminado."
+fi
+
+# ----- Crear Recovery Services vault (tipo correcto para IaaS VMs) -----
 echo "🗄️  Creando/verificando almacén de Recovery Services '$RECOVERY_VAULT_NAME'..."
 if exists_recovery_vault "$RECOVERY_VAULT_NAME"; then
   echo "  ℹ️  Almacén '$RECOVERY_VAULT_NAME' ya existe."
@@ -448,25 +467,46 @@ else
     --properties '{"sku":{"name":"Standard"}}' \
     --output none
   echo "  ✅ Almacén '$RECOVERY_VAULT_NAME' creado (Recovery Services vault)."
+  echo "  ⏳ Esperando propagación del almacén..."
+  sleep 30
 fi
 
-# ----- Habilitar backup de NubeVpsLinux1 con directiva por defecto -----
+# ----- Verificar que DefaultPolicy existe -----
 BACKUP_POLICY_NAME="DefaultPolicy"
+echo "📜 Verificando directiva de backup '$BACKUP_POLICY_NAME'..."
+POLICY_EXISTS=$(az backup policy show \
+  --resource-group "$RESOURCE_GROUP" \
+  --vault-name "$RECOVERY_VAULT_NAME" \
+  --name "$BACKUP_POLICY_NAME" \
+  --query "name" -o tsv 2>/dev/null || true)
 
+if [[ -z "$POLICY_EXISTS" ]]; then
+  echo "  ⚠️  Directiva '$BACKUP_POLICY_NAME' no encontrada. Listando directivas disponibles..."
+  az backup policy list \
+    --resource-group "$RESOURCE_GROUP" \
+    --vault-name "$RECOVERY_VAULT_NAME" \
+    --query "[].name" -o tsv
+  echo "  ❌ No se encontró '$BACKUP_POLICY_NAME'. Verifica que el almacén sea de tipo Recovery Services."
+  exit 1
+fi
+echo "  ✅ Directiva '$BACKUP_POLICY_NAME' disponible."
+
+# ----- Habilitar backup de NubeVpsLinux1 -----
 # Obtener el resource ID completo de la VM (requerido por az backup)
 VM1_ID=$(az vm show -g "$RESOURCE_GROUP" -n "$VM_LINUX1_NAME" --query "id" -o tsv)
 
 echo "🛡️  Habilitando backup de '$VM_LINUX1_NAME' con directiva '$BACKUP_POLICY_NAME'..."
-EXISTING_BACKUP=$(az backup item show \
+
+# Verificar si la VM ya está protegida (cualquier estado)
+EXISTING_BACKUP=$(az backup item list \
   --resource-group "$RESOURCE_GROUP" \
   --vault-name "$RECOVERY_VAULT_NAME" \
-  --container-name "$VM_LINUX1_NAME" \
-  --name "$VM_LINUX1_NAME" \
   --backup-management-type AzureIaasVM \
-  --query "properties.protectionState" -o tsv 2>/dev/null || true)
+  --query "[?properties.friendlyName=='$VM_LINUX1_NAME'].properties.protectionState" \
+  -o tsv 2>/dev/null || true)
 
-if [[ "$EXISTING_BACKUP" == "Protected" ]]; then
-  echo "  ℹ️  VM '$VM_LINUX1_NAME' ya tiene backup habilitado."
+if [[ -n "$EXISTING_BACKUP" ]]; then
+  echo "  ℹ️  VM '$VM_LINUX1_NAME' ya está registrada en el almacén (estado: $EXISTING_BACKUP)."
 else
   az backup protection enable-for-vm \
     --resource-group "$RESOURCE_GROUP" \
