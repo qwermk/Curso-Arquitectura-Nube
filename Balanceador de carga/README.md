@@ -77,6 +77,27 @@ graph TD
 
 ## 🚀 Uso
 
+### Cargar el script en Azure Cloud Shell
+
+**Opción 1 — Clonar el repositorio:**
+```bash
+git clone https://github.com/qwermk/Curso-Arquitectura-Nube.git
+cd "Curso-Arquitectura-Nube/Balanceador de carga"
+```
+
+**Opción 2 — Subir archivo manualmente:**
+1. Abrir [Azure Cloud Shell](https://shell.azure.com) (Bash)
+2. Clic en el ícono **📤 Cargar/Descargar archivos** en la barra de herramientas
+3. Seleccionar **Cargar** y elegir `balanceadores.sh`
+4. El archivo se sube a `$HOME/`
+
+**Opción 3 — Copiar y pegar:**
+1. Abrir el script en GitHub y copiar todo el contenido
+2. En Cloud Shell: `nano balanceadores.sh`
+3. Pegar, guardar con `Ctrl+O` y salir con `Ctrl+X`
+
+### Ejecutar
+
 ```bash
 chmod +x balanceadores.sh
 bash balanceadores.sh

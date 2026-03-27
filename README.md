@@ -35,6 +35,39 @@ Este repositorio reúne los ejercicios prácticos (laboratorios) desarrollados d
 
 Cada carpeta contiene su propio `README.md` con instrucciones específicas de despliegue y uso.
 
+### Cargar scripts en Azure Cloud Shell
+
+**Opción 1 — Clonar el repositorio directamente:**
+```bash
+git clone https://github.com/qwermk/Curso-Arquitectura-Nube.git
+cd Curso-Arquitectura-Nube
+```
+
+**Opción 2 — Subir archivos manualmente:**
+1. Abrir [Azure Cloud Shell](https://shell.azure.com) (Bash)
+2. Hacer clic en el ícono **📤 Cargar/Descargar archivos** en la barra de herramientas
+3. Seleccionar **Cargar** y elegir el script `.sh` desde tu equipo
+4. El archivo se sube a `$HOME/` — ejecutar con:
+```bash
+chmod +x ~/nombre_del_script.sh
+bash ~/nombre_del_script.sh
+```
+
+**Opción 3 — Copiar y pegar desde GitHub:**
+1. Abrir el script en GitHub y copiar todo el contenido
+2. En Azure Cloud Shell, crear el archivo:
+```bash
+nano nombre_del_script.sh
+```
+3. Pegar el contenido, guardar con `Ctrl+O` y salir con `Ctrl+X`
+4. Ejecutar:
+```bash
+chmod +x nombre_del_script.sh
+bash nombre_del_script.sh
+```
+
+> ⚠️ **NO** ejecutar los scripts con `source` (si hay error, cierra la sesión de Cloud Shell).
+
 ---
 
 ## 📄 Licencia

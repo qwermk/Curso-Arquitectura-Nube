@@ -155,6 +155,27 @@ Script Bash **idempotente y no destructivo** que continúa el laboratorio desple
 
 ## 🚀 Uso
 
+### Cargar los scripts en Azure Cloud Shell
+
+**Opción 1 — Clonar el repositorio:**
+```bash
+git clone https://github.com/qwermk/Curso-Arquitectura-Nube.git
+cd Curso-Arquitectura-Nube/Firewall+Load_Balancer+Backup
+```
+
+**Opción 2 — Subir archivos manualmente:**
+1. Abrir [Azure Cloud Shell](https://shell.azure.com) (Bash)
+2. Clic en el ícono **📤 Cargar/Descargar archivos** en la barra de herramientas
+3. Seleccionar **Cargar** y elegir los scripts (`.sh`)
+4. Los archivos se suben a `$HOME/`
+
+**Opción 3 — Copiar y pegar:**
+1. Abrir el script en GitHub y copiar todo el contenido
+2. En Cloud Shell: `nano deploy_before_class.sh` (o `deploy_in_class.sh`)
+3. Pegar, guardar con `Ctrl+O` y salir con `Ctrl+X`
+
+### Ejecutar
+
 **Fase 1 — Pre-clase** (ejecutar antes de la clase):
 ```bash
 chmod +x deploy_before_class.sh

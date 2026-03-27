@@ -112,6 +112,27 @@ graph TD
 
 ## 🚀 Uso
 
+### Cargar los scripts en Azure Cloud Shell
+
+**Opción 1 — Clonar el repositorio:**
+```bash
+git clone https://github.com/qwermk/Curso-Arquitectura-Nube.git
+cd "Curso-Arquitectura-Nube/Aplication Gateway"
+```
+
+**Opción 2 — Subir archivo manualmente:**
+1. Abrir [Azure Cloud Shell](https://shell.azure.com) (Bash)
+2. Clic en el ícono **📤 Cargar/Descargar archivos** en la barra de herramientas
+3. Seleccionar **Cargar** y elegir el script (`.sh`) deseado
+4. El archivo se sube a `$HOME/`
+
+**Opción 3 — Copiar y pegar:**
+1. Abrir el script en GitHub y copiar todo el contenido
+2. En Cloud Shell: `nano app_gateway.sh` (o `app_gateway2.sh`)
+3. Pegar, guardar con `Ctrl+O` y salir con `Ctrl+X`
+
+### Ejecutar
+
 **Versión Windows (IIS):**
 ```bash
 chmod +x app_gateway.sh
