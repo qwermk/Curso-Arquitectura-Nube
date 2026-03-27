@@ -154,7 +154,9 @@ exists_fw_policy() {
 }
 
 exists_recovery_vault() {
-  az backup vault show -g "$RESOURCE_GROUP" -n "$1" --query "name" -o tsv >/dev/null 2>&1
+  az resource show -g "$RESOURCE_GROUP" \
+    --resource-type "Microsoft.RecoveryServices/vaults" \
+    -n "$1" --query "name" -o tsv >/dev/null 2>&1
 }
 
 # =====================================================================
@@ -438,12 +440,14 @@ echo "🗄️  Creando/verificando almacén de Recovery Services '$RECOVERY_VAUL
 if exists_recovery_vault "$RECOVERY_VAULT_NAME"; then
   echo "  ℹ️  Almacén '$RECOVERY_VAULT_NAME' ya existe."
 else
-  az backup vault create \
+  az resource create \
     --resource-group "$RESOURCE_GROUP" \
+    --resource-type "Microsoft.RecoveryServices/vaults" \
     --name "$RECOVERY_VAULT_NAME" \
     --location "$LOCATION" \
+    --properties '{"sku":{"name":"Standard"}}' \
     --output none
-  echo "  ✅ Almacén '$RECOVERY_VAULT_NAME' creado."
+  echo "  ✅ Almacén '$RECOVERY_VAULT_NAME' creado (Recovery Services vault)."
 fi
 
 # ----- Habilitar backup de NubeVpsLinux1 con directiva por defecto -----
