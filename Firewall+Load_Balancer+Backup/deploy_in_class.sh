@@ -449,6 +449,9 @@ fi
 # ----- Habilitar backup de NubeVpsLinux1 con directiva por defecto -----
 BACKUP_POLICY_NAME="DefaultPolicy"
 
+# Obtener el resource ID completo de la VM (requerido por az backup)
+VM1_ID=$(az vm show -g "$RESOURCE_GROUP" -n "$VM_LINUX1_NAME" --query "id" -o tsv)
+
 echo "🛡️  Habilitando backup de '$VM_LINUX1_NAME' con directiva '$BACKUP_POLICY_NAME'..."
 EXISTING_BACKUP=$(az backup item show \
   --resource-group "$RESOURCE_GROUP" \
@@ -464,7 +467,7 @@ else
   az backup protection enable-for-vm \
     --resource-group "$RESOURCE_GROUP" \
     --vault-name "$RECOVERY_VAULT_NAME" \
-    --vm "$VM_LINUX1_NAME" \
+    --vm "$VM1_ID" \
     --policy-name "$BACKUP_POLICY_NAME" \
     --output none
   echo "  ✅ Backup habilitado para '$VM_LINUX1_NAME' con directiva '$BACKUP_POLICY_NAME'."
